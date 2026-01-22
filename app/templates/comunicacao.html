@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comunicação - {{ paciente.nome }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="comunicacao-container">
+        <!-- Header -->
+        <header class="header-comunicacao">
+            <div class="header-left">
+                <button onclick="voltarParaPacientes()" class="btn-back">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="19" y1="12" x2="5" y2="12"/>
+                        <polyline points="12 19 5 12 12 5"/>
+                    </svg>
+                    Voltar
+                </button>
+                <div class="paciente-info-header">
+                    <h2>{{ paciente.nome }}</h2>
+                    <p class="tempo-sessao">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        <span id="timer">00:00</span>
+                    </p>
+                </div>
+            </div>
+            <div class="header-right">
+                <button onclick="toggleVoz()" id="btnVoz" class="btn-voice active">
+                    🔊 Voz Ativada
+                </button>
+                <button onclick="abrirModalFinalizar()" class="btn-finalizar">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="9" y1="9" x2="15" y2="15"/>
+                        <line x1="15" y1="9" x2="9" y2="15"/>
+                    </svg>
+                    Finalizar Sessão
+                </button>
+            </div>
+        </header>
+
+        <!-- Categorias -->
+        <div class="categorias-tabs" id="categoriasTabs">
+            <!-- Carregado via JavaScript -->
+        </div>
+
+        <!-- Pictogramas -->
+        <div class="pictogramas-area" id="pictogramasArea">
+            <div class="loading">Carregando pictogramas...</div>
+        </div>
+    </div>
+
+    <!-- Modal de Finalização -->
+    <div id="modalFinalizar" class="modal-overlay" style="display: none;">
+        <div class="modal">
+            <h2>Finalizar Sessão</h2>
+            <p style="color: var(--gray-500); margin-bottom: 20px;">
+                Por favor, faça uma avaliação desta sessão antes de finalizar.
+            </p>
+            
+            <form id="formFinalizar">
+                <div class="form-group">
+                    <label for="avaliacao">Avaliação da Sessão *</label>
+                    <textarea id="avaliacao" rows="4" required 
+                              placeholder="Descreva como foi a sessão, comportamento do paciente, progressos observados, etc."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="observacoes">Observações Adicionais</label>
+                    <textarea id="observacoes" rows="2" 
+                              placeholder="Observações opcionais"></textarea>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="submit" class="btn-primary">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        Confirmar e Finalizar
+                    </button>
+                    <button type="button" onclick="fecharModalFinalizar()" class="btn-secondary">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/modals.js') }}"></script>
+    <script>
+        const PACIENTE_ID = {{ paciente.id }};
+        let sessaoId = null;
+        let categorias = [];
+        let pictogramas = [];
+        let categoriaAtual = null;
+        let vozAtivada = true;
+        let tempoInicio = null;
+        let timerInterval = null;
+
+        // Inicializar ao carregar página
+        window.addEventListener('DOMContentLoaded', async () => {
+            await iniciarSessao();
+            await carregarCategorias();
+            iniciarTimer();
+        });
+
+        async function iniciarSessao() {
+            try {
+                const response = await fetch('/api/sessoes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ paciente_id: PACIENTE_ID })
+                });
+                const data = await response.json();
+                sessaoId = data.sessao_id;
+                tempoInicio = Date.now();
+            } catch (error) {
+                console.error('Erro ao iniciar sessão:', error);
+            }
+        }
+
+        async function carregarCategorias() {
+            try {
+                const response = await fetch('/api/categorias');
+                const data = await response.json();
+                categorias = data.categorias;
+                
+                renderizarCategorias();
+                
+                if (categorias.length > 0) {
+                    selecionarCategoria(categorias[0].id);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar categorias:', error);
+            }
+        }
+
+        function renderizarCategorias() {
+            const tabs = document.getElementById('categoriasTabs');
+            tabs.innerHTML = categorias.map(cat => `
+                <button class="categoria-tab" 
+                        style="background-color: ${cat.cor}"
+                        onclick="selecionarCategoria(${cat.id})"
+                        data-categoria-id="${cat.id}">
+                    <span class="categoria-icone">${cat.icone}</span>
+                    <span class="categoria-nome">${cat.nome}</span>
+                </button>
+            `).join('');
+        }
+
+        async function selecionarCategoria(categoriaId) {
+            categoriaAtual = categoriaId;
+            
+            document.querySelectorAll('.categoria-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (parseInt(tab.dataset.categoriaId) === categoriaId) {
+                    tab.classList.add('active');
+                }
+            });
+            
+            await carregarPictogramas(categoriaId);
+        }
+
+        async function carregarPictogramas(categoriaId) {
+            try {
+                const response = await fetch(`/api/pictogramas?categoria_id=${categoriaId}`);
+                const data = await response.json();
+                pictogramas = data.pictogramas;
+                
+                renderizarPictogramas();
+            } catch (error) {
+                console.error('Erro ao carregar pictogramas:', error);
+            }
+        }
+
+        function renderizarPictogramas() {
+            const area = document.getElementById('pictogramasArea');
+            
+            if (pictogramas.length === 0) {
+                area.innerHTML = '<p style="text-align: center; color: var(--gray-400); padding: 40px;">Nenhum pictograma nesta categoria</p>';
+                return;
+            }
+            
+            area.innerHTML = pictogramas.map(pict => `
+                <div class="pictograma-card" onclick="clicarPictograma(event, ${pict.id}, '${pict.nome}', '${pict.audio_texto}')">
+                    <div class="pictograma-imagem">
+                        <img src="${pict.imagem_url}" alt="${pict.nome}" 
+                             onerror="this.style.display='none'; this.parentElement.innerHTML='<span style=\\'font-size:3rem\\'>📷</span>'">
+                    </div>
+                    <div class="pictograma-nome">${pict.nome}</div>
+                </div>
+            `).join('');
+        }
+
+        async function clicarPictograma(event, pictogramaId, nome, audioTexto) {
+            const tempoClique = Date.now();
+            const tempoResposta = (tempoClique - tempoInicio) / 1000;
+
+            // Feedback visual
+            const card = event?.currentTarget || event?.target?.closest('.pictograma-card');
+            if (card) {
+                card.classList.add('clicked');
+                setTimeout(() => {
+                    card.classList.remove('clicked');
+                }, 300);
+            }
+
+            // Fala o texto (se voz ativada) - precisa ser após interação do usuário
+            if (vozAtivada) {
+                console.log('Tentando falar:', audioTexto);
+                try {
+                    falar(audioTexto);
+                } catch (error) {
+                    console.error('Erro ao reproduzir áudio:', error);
+                    showAlert('Erro ao reproduzir áudio: ' + error.message, 'error');
+                }
+            } else {
+                console.log('Voz desativada - não falando');
+            }
+
+            // Registra no banco
+            try {
+                await fetch(`/api/sessoes/${sessaoId}/selecao`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pictograma_id: pictogramaId,
+                        tempo_resposta_segundos: tempoResposta
+                    })
+                });
+            } catch (error) {
+                console.error('Erro ao registrar seleção:', error);
+            }
+        }
+
+        function falar(texto) {
+            if (!texto) {
+                console.warn('Texto vazio, não há o que falar');
+                return;
+            }
+
+            try {
+                // Força o cancelamento completo
+                window.speechSynthesis.cancel();
+
+                // Aguarda um momento para garantir que cancelou
+                setTimeout(() => {
+                    try {
+                        const utterance = new SpeechSynthesisUtterance(texto);
+                        utterance.lang = 'pt-BR';
+                        utterance.rate = 0.9;
+                        utterance.pitch = 1.1;
+                        utterance.volume = 1.0;
+
+                        utterance.onstart = () => {
+                            console.log('Iniciou fala:', texto);
+                        };
+
+                        utterance.onend = () => {
+                            console.log('Finalizou fala:', texto);
+                        };
+
+                        utterance.onerror = (event) => {
+                            console.error('Erro na síntese de voz:', event);
+                            // Tenta reinicializar em caso de erro
+                            window.speechSynthesis.cancel();
+                        };
+
+                        // Verifica se o navegador está pronto
+                        if (window.speechSynthesis.speaking) {
+                            console.warn('Ainda falando, forçando parada...');
+                            window.speechSynthesis.cancel();
+                            setTimeout(() => window.speechSynthesis.speak(utterance), 200);
+                        } else {
+                            window.speechSynthesis.speak(utterance);
+                        }
+                    } catch (innerError) {
+                        console.error('Erro interno ao falar:', innerError);
+                    }
+                }, 150);
+            } catch (error) {
+                console.error('Erro ao inicializar síntese de voz:', error);
+            }
+        }
+
+        // Inicializar o sintetizador de voz quando a página carregar
+        // Isso ajuda em alguns navegadores
+        (function inicializarVoz() {
+            try {
+                // Força o carregamento das vozes
+                const voices = window.speechSynthesis.getVoices();
+                console.log('Vozes disponíveis:', voices.length);
+
+                // Alguns navegadores precisam de um evento extra
+                if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                    window.speechSynthesis.onvoiceschanged = () => {
+                        const voicesUpdated = window.speechSynthesis.getVoices();
+                        console.log('Vozes atualizadas:', voicesUpdated.length);
+                    };
+                }
+            } catch (error) {
+                console.error('Erro ao inicializar vozes:', error);
+            }
+        })();
+
+        function toggleVoz() {
+            vozAtivada = !vozAtivada;
+            const btn = document.getElementById('btnVoz');
+            btn.textContent = vozAtivada ? '🔊 Voz Ativada' : '🔇 Voz Desativada';
+            btn.classList.toggle('active');
+
+            // Reiniciar síntese ao ativar/desativar
+            window.speechSynthesis.cancel();
+        }
+
+        // Sistema de proteção contra travamento de áudio
+        // Verifica a cada 5 segundos se há fala presa e limpa
+        setInterval(() => {
+            if (window.speechSynthesis.speaking) {
+                console.log('Verificação: Síntese de voz ainda ativa');
+            }
+        }, 5000);
+
+        function iniciarTimer() {
+            const timerEl = document.getElementById('timer');
+            timerInterval = setInterval(() => {
+                const segundos = Math.floor((Date.now() - tempoInicio) / 1000);
+                const mins = Math.floor(segundos / 60);
+                const segs = segundos % 60;
+                timerEl.textContent = `${String(mins).padStart(2, '0')}:${String(segs).padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function abrirModalFinalizar() {
+            document.getElementById('modalFinalizar').style.display = 'flex';
+            document.getElementById('avaliacao').focus();
+        }
+
+        function fecharModalFinalizar() {
+            document.getElementById('modalFinalizar').style.display = 'none';
+        }
+
+        document.getElementById('formFinalizar').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const avaliacao = document.getElementById('avaliacao').value.trim();
+            const observacoes = document.getElementById('observacoes').value.trim();
+
+            if (!avaliacao) {
+                showAlert('A avaliação é obrigatória!', 'warning');
+                return;
+            }
+
+            clearInterval(timerInterval);
+
+            try {
+                const response = await fetch(`/api/sessoes/${sessaoId}/finalizar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ avaliacao, observacoes })
+                });
+
+                const data = await response.json();
+
+                if (data.sucesso) {
+                    showAlert(`Sessão finalizada com sucesso!\nDuração: ${data.duracao_minutos} minuto(s)`, 'success');
+                    setTimeout(() => {
+                        window.location.href = '/selecionar-paciente';
+                    }, 1500);
+                } else {
+                    showAlert('Erro: ' + (data.erro || 'Erro desconhecido'), 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao finalizar sessão:', error);
+                showAlert('Erro ao finalizar sessão', 'error');
+            }
+        });
+
+        async function voltarParaPacientes() {
+            const confirmar = await showConfirm('Deseja sair? Você precisará finalizar a sessão com uma avaliação.');
+            if (confirmar) {
+                abrirModalFinalizar();
+            }
+        }
+    </script>
+</body>
+</html>

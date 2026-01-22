@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Sistema - Sistema CAA</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+                Gerenciar Sistema
+            </h1>
+            <div class="header-actions">
+                <span id="usuarioNome" style="color: var(--gray-500); margin-right: 12px;"></span>
+                <a href="/selecionar-paciente" class="btn-secondary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                    </svg>
+                    Pacientes
+                </a>
+                <a href="/historico" class="btn-secondary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    Histórico
+                </a>
+                <button onclick="logout()" class="btn-danger">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    Sair
+                </button>
+            </div>
+        </header>
+
+        <!-- Navegação por Tabs -->
+        <div class="nav-menu">
+            <a href="#" class="nav-item active" onclick="mudarTab('categorias', event)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"/>
+                    <rect x="14" y="3" width="7" height="7"/>
+                    <rect x="14" y="14" width="7" height="7"/>
+                    <rect x="3" y="14" width="7" height="7"/>
+                </svg>
+                Categorias
+            </a>
+            <a href="#" class="nav-item" onclick="mudarTab('pictogramas', event)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                </svg>
+                Pictogramas
+            </a>
+        </div>
+
+        <!-- SEÇÃO: CATEGORIAS -->
+        <div id="secaoCategorias" class="pacientes-section">
+            <div class="pacientes-header">
+                <h2>Categorias</h2>
+                <button onclick="abrirModalCategoria()" class="btn-primary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Nova Categoria
+                </button>
+            </div>
+
+            <div id="listaCategorias">
+                <div class="loading">Carregando categorias...</div>
+            </div>
+        </div>
+
+        <!-- SEÇÃO: PICTOGRAMAS -->
+        <div id="secaoPictogramas" class="pacientes-section" style="display: none;">
+            <div class="pacientes-header">
+                <h2>Pictogramas</h2>
+                <button onclick="abrirModalPictograma()" class="btn-primary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Novo Pictograma
+                </button>
+            </div>
+
+            <!-- Filtro por categoria -->
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label for="filtroCategoriaPictograma">Filtrar por categoria</label>
+                <select id="filtroCategoriaPictograma" onchange="carregarPictogramas()">
+                    <option value="">Todas as categorias</option>
+                </select>
+            </div>
+
+            <div id="listaPictogramas">
+                <div class="loading">Carregando pictogramas...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Categoria -->
+    <div id="modalCategoria" class="modal-overlay" style="display: none;" onclick="fecharModal('modalCategoria', event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <h2 id="tituloModalCategoria">Nova Categoria</h2>
+
+            <form id="formCategoria">
+                <input type="hidden" id="categoriaId">
+
+                <div class="form-group">
+                    <label for="categoriaNome">Nome da Categoria *</label>
+                    <input type="text" id="categoriaNome" required placeholder="Ex: Comida">
+                </div>
+
+                <div class="form-group">
+                    <label for="categoriaCor">Cor *</label>
+                    <input type="color" id="categoriaCor" required value="#6366F1">
+                </div>
+
+                <div class="form-group">
+                    <label for="categoriaIcone">Ícone (Emoji)</label>
+                    <input type="text" id="categoriaIcone" placeholder="Ex: 🍔" maxlength="5">
+                    <span class="form-hint">Você pode copiar um emoji de sites como emojipedia.org</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="categoriaOrdem">Ordem de Exibição</label>
+                    <input type="number" id="categoriaOrdem" placeholder="1, 2, 3..." min="0">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="submit" class="btn-primary">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        Salvar
+                    </button>
+                    <button type="button" onclick="fecharModal('modalCategoria')" class="btn-secondary">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Pictograma -->
+    <div id="modalPictograma" class="modal-overlay" style="display: none;" onclick="fecharModal('modalPictograma', event)">
+        <div class="modal" onclick="event.stopPropagation()" style="max-width: 600px;">
+            <h2 id="tituloModalPictograma">Novo Pictograma</h2>
+
+            <form id="formPictograma">
+                <input type="hidden" id="pictogramaId">
+
+                <div class="form-group">
+                    <label for="pictogramaNome">Nome do Pictograma *</label>
+                    <input type="text" id="pictogramaNome" required placeholder="Ex: Água">
+                </div>
+
+                <div class="form-group">
+                    <label for="pictogramaCategoria">Categoria *</label>
+                    <select id="pictogramaCategoria" required>
+                        <option value="">Selecione uma categoria</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="pictogramaAudio">Texto de Áudio *</label>
+                    <input type="text" id="pictogramaAudio" required placeholder="Ex: Eu quero água">
+                    <span class="form-hint">Este texto será falado quando o pictograma for clicado</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="pictogramaImagem">Imagem do Pictograma *</label>
+                    <input type="file" id="pictogramaImagem" accept="image/png,image/jpg,image/jpeg,image/gif" onchange="previewImagem(event)">
+                    <span class="form-hint">Tamanho recomendado: 300x300px. Formato: PNG, JPG, GIF</span>
+                </div>
+
+                <!-- Preview da imagem -->
+                <div id="previewContainer" style="display: none; text-align: center; margin: 16px 0;">
+                    <p style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: 8px;">Preview:</p>
+                    <img id="previewImagem" style="max-width: 150px; max-height: 150px; border-radius: var(--radius); border: 2px solid var(--gray-200);">
+                </div>
+
+                <div class="form-group">
+                    <label for="pictogramaOrdem">Ordem de Exibição</label>
+                    <input type="number" id="pictogramaOrdem" placeholder="1, 2, 3..." min="0">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="submit" class="btn-primary" id="btnSalvarPictograma">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        Salvar
+                    </button>
+                    <button type="button" onclick="fecharModal('modalPictograma')" class="btn-secondary">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/modals.js') }}"></script>
+    <script>
+        let categorias = [];
+        let pictogramas = [];
+        let imagemUrlAtual = null;
+
+        // Carregar dados ao abrir a página
+        window.addEventListener('DOMContentLoaded', async () => {
+            await carregarUsuarioAtual();
+            await carregarCategorias();
+        });
+
+        async function carregarUsuarioAtual() {
+            try {
+                const response = await fetch('/api/usuario/atual');
+                const data = await response.json();
+
+                if (!data.logado) {
+                    window.location.href = '/';
+                    return;
+                }
+
+                document.getElementById('usuarioNome').textContent = `Olá, ${data.usuario.nome}`;
+            } catch (error) {
+                console.error('Erro:', error);
+            }
+        }
+
+        // ============ CATEGORIAS ============
+
+        async function carregarCategorias() {
+            try {
+                const response = await fetch('/api/categorias');
+                const data = await response.json();
+
+                if (data.erro === 'Não autenticado') {
+                    window.location.href = '/';
+                    return;
+                }
+
+                categorias = data.categorias || [];
+                renderizarCategorias();
+                popularSelectsCategorias();
+            } catch (error) {
+                console.error('Erro ao carregar categorias:', error);
+                document.getElementById('listaCategorias').innerHTML =
+                    '<p class="error">Erro ao carregar categorias.</p>';
+            }
+        }
+
+        function renderizarCategorias() {
+            const lista = document.getElementById('listaCategorias');
+
+            if (categorias.length === 0) {
+                lista.innerHTML = `
+                    <div class="empty-state">
+                        <p>Nenhuma categoria cadastrada</p>
+                        <button onclick="abrirModalCategoria()" class="btn-primary">
+                            Criar Primeira Categoria
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            lista.innerHTML = `
+                <div class="pacientes-grid">
+                    ${categorias.map(c => `
+                        <div class="paciente-card" style="background: ${c.cor}20; border-color: ${c.cor};">
+                            <div style="font-size: 2rem; flex-shrink: 0;">${c.icone || '📁'}</div>
+                            <div class="paciente-info" style="flex: 1;">
+                                <h3>${c.nome}</h3>
+                                <p style="color: ${c.cor}; font-weight: 600;">Ordem: ${c.ordem || 0}</p>
+                            </div>
+                            <div style="display: flex; gap: 8px; flex-direction: column;">
+                                <button onclick="editarCategoria(${c.id})" class="btn-secondary" style="font-size: 0.85rem; padding: 8px 12px;">
+                                    ✏️ Editar
+                                </button>
+                                <button onclick="excluirCategoria(${c.id}, '${c.nome}')" class="btn-danger" style="font-size: 0.85rem; padding: 8px 12px;">
+                                    🗑️ Excluir
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function abrirModalCategoria(categoriaId = null) {
+            const modal = document.getElementById('modalCategoria');
+            const titulo = document.getElementById('tituloModalCategoria');
+            const form = document.getElementById('formCategoria');
+
+            form.reset();
+
+            if (categoriaId) {
+                const categoria = categorias.find(c => c.id === categoriaId);
+                titulo.textContent = 'Editar Categoria';
+                document.getElementById('categoriaId').value = categoria.id;
+                document.getElementById('categoriaNome').value = categoria.nome;
+                document.getElementById('categoriaCor').value = categoria.cor;
+                document.getElementById('categoriaIcone').value = categoria.icone || '';
+                document.getElementById('categoriaOrdem').value = categoria.ordem || '';
+            } else {
+                titulo.textContent = 'Nova Categoria';
+                document.getElementById('categoriaId').value = '';
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        function editarCategoria(id) {
+            abrirModalCategoria(id);
+        }
+
+        async function excluirCategoria(id, nome) {
+            const confirmar = await showConfirm(`Tem certeza que deseja excluir a categoria "${nome}"?\n\nAVISO: Todos os pictogramas desta categoria também serão excluídos!`);
+            if (!confirmar) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/categorias/${id}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (data.sucesso) {
+                    showAlert('Categoria excluída com sucesso!', 'success');
+                    await carregarCategorias();
+                } else {
+                    showAlert('Erro ao excluir: ' + (data.erro || 'Erro desconhecido'), 'error');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showAlert('Erro ao excluir categoria', 'error');
+            }
+        }
+
+        document.getElementById('formCategoria').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const categoriaId = document.getElementById('categoriaId').value;
+            const dados = {
+                nome: document.getElementById('categoriaNome').value,
+                cor: document.getElementById('categoriaCor').value,
+                icone: document.getElementById('categoriaIcone').value || null,
+                ordem: parseInt(document.getElementById('categoriaOrdem').value) || 0
+            };
+
+            try {
+                const url = categoriaId ? `/api/categorias/${categoriaId}` : '/api/categorias';
+                const method = categoriaId ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dados)
+                });
+
+                const result = await response.json();
+
+                if (result.sucesso) {
+                    showAlert(categoriaId ? 'Categoria atualizada!' : 'Categoria criada!', 'success');
+                    fecharModal('modalCategoria');
+                    await carregarCategorias();
+                } else {
+                    showAlert('Erro: ' + (result.erro || 'Erro desconhecido'), 'error');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showAlert('Erro ao salvar categoria', 'error');
+            }
+        });
+
+        // ============ PICTOGRAMAS ============
+
+        async function carregarPictogramas() {
+            const categoriaId = document.getElementById('filtroCategoriaPictograma').value;
+            const url = categoriaId ? `/api/pictogramas?categoria_id=${categoriaId}` : '/api/pictogramas';
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.erro === 'Não autenticado') {
+                    window.location.href = '/';
+                    return;
+                }
+
+                pictogramas = data.pictogramas || [];
+                renderizarPictogramas();
+            } catch (error) {
+                console.error('Erro ao carregar pictogramas:', error);
+                document.getElementById('listaPictogramas').innerHTML =
+                    '<p class="error">Erro ao carregar pictogramas.</p>';
+            }
+        }
+
+        function renderizarPictogramas() {
+            const lista = document.getElementById('listaPictogramas');
+
+            if (pictogramas.length === 0) {
+                lista.innerHTML = `
+                    <div class="empty-state">
+                        <p>Nenhum pictograma encontrado</p>
+                        <button onclick="abrirModalPictograma()" class="btn-primary">
+                            Criar Primeiro Pictograma
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            lista.innerHTML = `
+                <div class="pictogramas-area" style="padding: 0;">
+                    ${pictogramas.map(p => {
+                        const categoria = categorias.find(c => c.id === p.categoria_id);
+                        return `
+                            <div class="pictograma-card" style="position: relative;">
+                                <div class="pictograma-imagem">
+                                    <img src="${p.imagem_url}" alt="${p.nome}">
+                                </div>
+                                <div class="pictograma-nome">${p.nome}</div>
+                                <p style="font-size: 0.8rem; color: var(--gray-500); margin-top: 4px;">
+                                    ${categoria ? categoria.nome : 'Sem categoria'}
+                                </p>
+                                <div style="display: flex; gap: 4px; margin-top: 8px;">
+                                    <button onclick="editarPictograma(${p.id})" class="btn-secondary" style="flex: 1; font-size: 0.75rem; padding: 6px;">
+                                        ✏️
+                                    </button>
+                                    <button onclick="excluirPictograma(${p.id}, '${p.nome}')" class="btn-danger" style="flex: 1; font-size: 0.75rem; padding: 6px;">
+                                        🗑️
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function abrirModalPictograma(pictogramaId = null) {
+            const modal = document.getElementById('modalPictograma');
+            const titulo = document.getElementById('tituloModalPictograma');
+            const form = document.getElementById('formPictograma');
+
+            form.reset();
+            imagemUrlAtual = null;
+            document.getElementById('previewContainer').style.display = 'none';
+
+            if (pictogramaId) {
+                const pictograma = pictogramas.find(p => p.id === pictogramaId);
+                titulo.textContent = 'Editar Pictograma';
+                document.getElementById('pictogramaId').value = pictograma.id;
+                document.getElementById('pictogramaNome').value = pictograma.nome;
+                document.getElementById('pictogramaCategoria').value = pictograma.categoria_id;
+                document.getElementById('pictogramaAudio').value = pictograma.audio_texto;
+                document.getElementById('pictogramaOrdem').value = pictograma.ordem || '';
+
+                // Mostrar preview da imagem atual
+                imagemUrlAtual = pictograma.imagem_url;
+                document.getElementById('previewImagem').src = pictograma.imagem_url;
+                document.getElementById('previewContainer').style.display = 'block';
+            } else {
+                titulo.textContent = 'Novo Pictograma';
+                document.getElementById('pictogramaId').value = '';
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        function editarPictograma(id) {
+            abrirModalPictograma(id);
+        }
+
+        async function excluirPictograma(id, nome) {
+            const confirmar = await showConfirm(`Tem certeza que deseja excluir o pictograma "${nome}"?`);
+            if (!confirmar) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/pictogramas/${id}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (data.sucesso) {
+                    showAlert('Pictograma excluído com sucesso!', 'success');
+                    await carregarPictogramas();
+                } else {
+                    showAlert('Erro ao excluir: ' + (data.erro || 'Erro desconhecido'), 'error');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showAlert('Erro ao excluir pictograma', 'error');
+            }
+        }
+
+        function previewImagem(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('previewImagem').src = e.target.result;
+                    document.getElementById('previewContainer').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        document.getElementById('formPictograma').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const pictogramaId = document.getElementById('pictogramaId').value;
+            const arquivoImagem = document.getElementById('pictogramaImagem').files[0];
+
+            // Se for novo pictograma ou se selecionou nova imagem, fazer upload
+            let imagemUrl = imagemUrlAtual;
+
+            if (arquivoImagem) {
+                const btnSalvar = document.getElementById('btnSalvarPictograma');
+                btnSalvar.disabled = true;
+                btnSalvar.textContent = 'Enviando imagem...';
+
+                const formData = new FormData();
+                formData.append('imagem', arquivoImagem);
+
+                try {
+                    const uploadResponse = await fetch('/api/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const uploadResult = await uploadResponse.json();
+
+                    if (!uploadResult.sucesso) {
+                        showAlert('Erro ao fazer upload: ' + (uploadResult.erro || 'Erro desconhecido'), 'error');
+                        btnSalvar.disabled = false;
+                        btnSalvar.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Salvar';
+                        return;
+                    }
+
+                    imagemUrl = uploadResult.url;
+                } catch (error) {
+                    console.error('Erro no upload:', error);
+                    showAlert('Erro ao fazer upload da imagem', 'error');
+                    btnSalvar.disabled = false;
+                    btnSalvar.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Salvar';
+                    return;
+                }
+            }
+
+            // Validar se tem imagem (novo ou existente)
+            if (!imagemUrl) {
+                showAlert('Por favor, selecione uma imagem para o pictograma', 'warning');
+                return;
+            }
+
+            const dados = {
+                nome: document.getElementById('pictogramaNome').value,
+                categoria_id: parseInt(document.getElementById('pictogramaCategoria').value),
+                audio_texto: document.getElementById('pictogramaAudio').value,
+                imagem_url: imagemUrl,
+                ordem: parseInt(document.getElementById('pictogramaOrdem').value) || 0
+            };
+
+            try {
+                const url = pictogramaId ? `/api/pictogramas/${pictogramaId}` : '/api/pictogramas';
+                const method = pictogramaId ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dados)
+                });
+
+                const result = await response.json();
+
+                if (result.sucesso) {
+                    showAlert(pictogramaId ? 'Pictograma atualizado!' : 'Pictograma criado!', 'success');
+                    fecharModal('modalPictograma');
+                    await carregarPictogramas();
+                } else {
+                    showAlert('Erro: ' + (result.erro || 'Erro desconhecido'), 'error');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showAlert('Erro ao salvar pictograma', 'error');
+            } finally {
+                const btnSalvar = document.getElementById('btnSalvarPictograma');
+                btnSalvar.disabled = false;
+                btnSalvar.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Salvar';
+            }
+        });
+
+        // ============ AUXILIARES ============
+
+        function popularSelectsCategorias() {
+            const selects = [
+                document.getElementById('pictogramaCategoria'),
+                document.getElementById('filtroCategoriaPictograma')
+            ];
+
+            selects.forEach(select => {
+                // Limpar opções existentes (exceto a primeira)
+                while (select.options.length > 1) {
+                    select.remove(1);
+                }
+
+                // Adicionar categorias
+                categorias.forEach(c => {
+                    const option = document.createElement('option');
+                    option.value = c.id;
+                    option.textContent = `${c.icone || '📁'} ${c.nome}`;
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        function mudarTab(tab, event) {
+            event.preventDefault();
+
+            // Atualizar tabs ativas
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.closest('.nav-item').classList.add('active');
+
+            // Mostrar seção correspondente
+            if (tab === 'categorias') {
+                document.getElementById('secaoCategorias').style.display = 'block';
+                document.getElementById('secaoPictogramas').style.display = 'none';
+            } else {
+                document.getElementById('secaoCategorias').style.display = 'none';
+                document.getElementById('secaoPictogramas').style.display = 'block';
+                carregarPictogramas();
+            }
+        }
+
+        function fecharModal(modalId, event) {
+            if (!event || event.target.classList.contains('modal-overlay')) {
+                document.getElementById(modalId).style.display = 'none';
+            }
+        }
+
+        async function logout() {
+            const confirmar = await showConfirm('Deseja realmente sair?');
+            if (confirmar) {
+                await fetch('/api/logout', { method: 'POST' });
+                window.location.href = '/';
+            }
+        }
+
+        // Fechar modais com ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                fecharModal('modalCategoria');
+                fecharModal('modalPictograma');
+            }
+        });
+    </script>
+</body>
+</html>

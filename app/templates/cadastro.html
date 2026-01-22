@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - Sistema CAA</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="auth-box">
+            <!-- Logo e Título -->
+            <div class="auth-header">
+                <div class="logo-icon">
+                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="8.5" cy="7" r="4"/>
+                        <line x1="20" y1="8" x2="20" y2="14"/>
+                        <line x1="23" y1="11" x2="17" y2="11"/>
+                    </svg>
+                </div>
+                <h1>Criar Conta</h1>
+                <p class="subtitle">Cadastre-se como profissional</p>
+            </div>
+            
+            <!-- Formulário de Cadastro -->
+            <form id="cadastroForm" class="auth-form">
+                <div class="form-group">
+                    <label for="nome">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        Nome Completo *
+                    </label>
+                    <input type="text" id="nome" name="nome" required 
+                           placeholder="Digite seu nome completo">
+                </div>
+                
+                <div class="form-group">
+                    <label for="cargo">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                        </svg>
+                        Cargo/Função
+                    </label>
+                    <select id="cargo" name="cargo">
+                        <option value="">Selecione...</option>
+                        <option value="Terapeuta">Terapeuta</option>
+                        <option value="Fonoaudiólogo(a)">Fonoaudiólogo(a)</option>
+                        <option value="Psicólogo(a)">Psicólogo(a)</option>
+                        <option value="Pedagogo(a)">Pedagogo(a)</option>
+                        <option value="Educador(a)">Educador(a)</option>
+                        <option value="Estagiário(a)">Estagiário(a)</option>
+                        <option value="Outro">Outro</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="login">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                            <polyline points="10 17 15 12 10 7"/>
+                            <line x1="15" y1="12" x2="3" y2="12"/>
+                        </svg>
+                        Login *
+                    </label>
+                    <input type="text" id="login" name="login" required 
+                           placeholder="Escolha um login (ex: maria.silva)">
+                    <small class="form-hint">Este será seu identificador para entrar no sistema</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="senha">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                        Senha Numérica *
+                    </label>
+                    <input type="password" id="senha" name="senha" required 
+                           placeholder="Mínimo 4 dígitos" 
+                           pattern="[0-9]{4,}" inputmode="numeric" minlength="4">
+                    <small class="form-hint">Use apenas números (mínimo 4 dígitos)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmarSenha">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        Confirmar Senha *
+                    </label>
+                    <input type="password" id="confirmarSenha" name="confirmarSenha" required 
+                           placeholder="Digite a senha novamente" 
+                           pattern="[0-9]{4,}" inputmode="numeric" minlength="4">
+                </div>
+                
+                <button type="submit" class="btn-primary btn-block">
+                    <span>Criar Conta</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="8.5" cy="7" r="4"/>
+                        <line x1="20" y1="8" x2="20" y2="14"/>
+                        <line x1="23" y1="11" x2="17" y2="11"/>
+                    </svg>
+                </button>
+            </form>
+            
+            <!-- Link para login -->
+            <div class="auth-footer">
+                <p>Já tem uma conta?</p>
+                <a href="/" class="btn-link">Fazer login</a>
+            </div>
+            
+            <!-- Mensagem de erro/sucesso -->
+            <div id="mensagem" class="alert" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('cadastroForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const nome = document.getElementById('nome').value.trim();
+            const cargo = document.getElementById('cargo').value;
+            const login = document.getElementById('login').value.trim();
+            const senha = document.getElementById('senha').value.trim();
+            const confirmarSenha = document.getElementById('confirmarSenha').value.trim();
+            
+            const btnSubmit = e.target.querySelector('button[type="submit"]');
+            const msgDiv = document.getElementById('mensagem');
+            
+            // Validações
+            if (senha !== confirmarSenha) {
+                msgDiv.textContent = 'As senhas não coincidem';
+                msgDiv.className = 'alert alert-error';
+                msgDiv.style.display = 'block';
+                return;
+            }
+            
+            if (!/^\d{4,}$/.test(senha)) {
+                msgDiv.textContent = 'A senha deve conter apenas números (mínimo 4 dígitos)';
+                msgDiv.className = 'alert alert-error';
+                msgDiv.style.display = 'block';
+                return;
+            }
+            
+            msgDiv.style.display = 'none';
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = '<span>Cadastrando...</span>';
+            
+            try {
+                const response = await fetch('/api/cadastro', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome, cargo, login, senha })
+                });
+                
+                const data = await response.json();
+                
+                if (data.sucesso) {
+                    msgDiv.textContent = 'Cadastro realizado com sucesso! Redirecionando...';
+                    msgDiv.className = 'alert alert-success';
+                    msgDiv.style.display = 'block';
+                    
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1500);
+                } else {
+                    msgDiv.textContent = data.erro || 'Erro ao cadastrar';
+                    msgDiv.className = 'alert alert-error';
+                    msgDiv.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                msgDiv.textContent = 'Erro de conexão. Tente novamente.';
+                msgDiv.className = 'alert alert-error';
+                msgDiv.style.display = 'block';
+            } finally {
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = `
+                    <span>Criar Conta</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="8.5" cy="7" r="4"/>
+                        <line x1="20" y1="8" x2="20" y2="14"/>
+                        <line x1="23" y1="11" x2="17" y2="11"/>
+                    </svg>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
