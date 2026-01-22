@@ -4,9 +4,14 @@ Arquivo principal para executar a aplicação
 Sistema de Comunicação Alternativa com Pictogramas para TEA
 """
 
+import os
 from app import create_app
 
-app = create_app('development')
+# Detecta ambiente automaticamente
+env = os.environ.get('FLASK_ENV', 'production')
+config_name = 'development' if env == 'development' else 'production'
+
+app = create_app(config_name)
 
 if __name__ == '__main__':
     print("\n" + "="*60)
