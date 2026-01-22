@@ -579,34 +579,50 @@ def api_obter_historico_sessao(sessao_id):
 @main.route('/api/upload', methods=['POST'])
 @login_required
 def api_upload_imagem():
-    """Upload de imagem para pictograma"""
-    import os
-    
+    """Upload de imagem para pictograma via Cloudinary"""
+    import cloudinary
+    import cloudinary.uploader
+    from flask import current_app
+
+    # Configurar Cloudinary
+    cloudinary.config(
+        cloud_name=current_app.config.get('CLOUDINARY_CLOUD_NAME'),
+        api_key=current_app.config.get('CLOUDINARY_API_KEY'),
+        api_secret=current_app.config.get('CLOUDINARY_API_SECRET')
+    )
+
     if 'imagem' not in request.files:
         return jsonify({'erro': 'Nenhuma imagem enviada'}), 400
-    
+
     arquivo = request.files['imagem']
-    
+
     if arquivo.filename == '':
         return jsonify({'erro': 'Nenhum arquivo selecionado'}), 400
-    
+
     extensoes_permitidas = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
     extensao = arquivo.filename.rsplit('.', 1)[1].lower() if '.' in arquivo.filename else ''
-    
+
     if extensao not in extensoes_permitidas:
         return jsonify({'erro': 'Formato não permitido'}), 400
-    
-    nome_arquivo = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{arquivo.filename}"
-    
-    pasta_uploads = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'app', 'static', 'images')
-    os.makedirs(pasta_uploads, exist_ok=True)
-    
-    caminho_completo = os.path.join(pasta_uploads, nome_arquivo)
-    arquivo.save(caminho_completo)
-    
-    url = f"/static/images/{nome_arquivo}"
-    
-    return jsonify({'sucesso': True, 'url': url})
+
+    try:
+        # Upload para Cloudinary
+        resultado = cloudinary.uploader.upload(
+            arquivo,
+            folder='pictogramas_caa',
+            resource_type='image',
+            transformation=[
+                {'width': 500, 'height': 500, 'crop': 'limit'},
+                {'quality': 'auto:good'}
+            ]
+        )
+
+        url = resultado['secure_url']
+
+        return jsonify({'sucesso': True, 'url': url})
+
+    except Exception as e:
+        return jsonify({'erro': f'Erro ao fazer upload: {str(e)}'}), 500
 
 
 # ========== API - HEALTH CHECK ==========

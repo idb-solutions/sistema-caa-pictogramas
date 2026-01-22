@@ -46,30 +46,32 @@ def inicializar_banco():
         db.session.commit()
         print("Categorias criadas!")
         
+        # URLs padrão usando placeholder do Cloudinary
+        # Em produção, recomenda-se fazer upload das imagens reais via interface /gerenciar
         pictogramas = [
             # COMIDA
-            {'nome': 'Água', 'cat': 'Comida', 'audio': 'Água', 'ordem': 1, 'img': '/static/images/agua.png'},
-            {'nome': 'Pão', 'cat': 'Comida', 'audio': 'Pão', 'ordem': 2, 'img': '/static/images/pao.png'},
-            {'nome': 'Fruta', 'cat': 'Comida', 'audio': 'Fruta', 'ordem': 3, 'img': '/static/images/fruta.png'},
-            {'nome': 'Suco', 'cat': 'Comida', 'audio': 'Suco', 'ordem': 4, 'img': '/static/images/suco.png'},
+            {'nome': 'Água', 'cat': 'Comida', 'audio': 'Água', 'ordem': 1, 'img': 'https://res.cloudinary.com/demo/image/upload/v1/docs/sample.jpg'},
+            {'nome': 'Pão', 'cat': 'Comida', 'audio': 'Pão', 'ordem': 2, 'img': 'https://res.cloudinary.com/demo/image/upload/v1/docs/sample.jpg'},
+            {'nome': 'Fruta', 'cat': 'Comida', 'audio': 'Fruta', 'ordem': 3, 'img': 'https://res.cloudinary.com/demo/image/upload/v1/docs/sample.jpg'},
+            {'nome': 'Suco', 'cat': 'Comida', 'audio': 'Suco', 'ordem': 4, 'img': 'https://res.cloudinary.com/demo/image/upload/v1/docs/sample.jpg'},
 
             # EMOÇÕES
-            {'nome': 'Feliz', 'cat': 'Emoções', 'audio': 'Feliz', 'ordem': 1, 'img': '/static/images/feliz.png'},
-            {'nome': 'Triste', 'cat': 'Emoções', 'audio': 'Triste', 'ordem': 2, 'img': '/static/images/triste.png'},
-            {'nome': 'Raiva', 'cat': 'Emoções', 'audio': 'Raiva', 'ordem': 3, 'img': '/static/images/raiva.png'},
-            {'nome': 'Medo', 'cat': 'Emoções', 'audio': 'Medo', 'ordem': 4, 'img': '/static/images/medo.png'},
-            
+            {'nome': 'Feliz', 'cat': 'Emoções', 'audio': 'Feliz', 'ordem': 1, 'img': 'https://res.cloudinary.com/demo/image/upload/v1/docs/sample.jpg'},
+            {'nome': 'Triste', 'cat': 'Emoções', 'audio': 'Triste', 'ordem': 2, 'img': 'https://res.cloudinary.com/demo/image/upload/v1/docs/sample.jpg'},
+            {'nome': 'Raiva', 'cat': 'Emoções', 'audio': 'Raiva', 'ordem': 3, 'img': 'https://res.cloudinary.com/demo/image/upload/v1/docs/sample.jpg'},
+            {'nome': 'Medo', 'cat': 'Emoções', 'audio': 'Medo', 'ordem': 4, 'img': 'https://res.cloudinary.com/demo/image/upload/v1/docs/sample.jpg'},
+
             # NECESSIDADES
-            {'nome': 'Banheiro', 'cat': 'Necessidades', 'audio': 'Banheiro', 'ordem': 1, 'img': '/static/images/banheiro.png'},
-            {'nome': 'Ajuda', 'cat': 'Necessidades', 'audio': 'Ajuda', 'ordem': 2, 'img': '/static/images/ajuda.png'},
-            {'nome': 'Descanso', 'cat': 'Necessidades', 'audio': 'Descanso', 'ordem': 3, 'img': '/static/images/descanso.png'},
-            {'nome': 'Sede', 'cat': 'Necessidades', 'audio': 'Sede', 'ordem': 4, 'img': '/static/images/sede.png'},
-            
+            {'nome': 'Banheiro', 'cat': 'Necessidades', 'audio': 'Banheiro', 'ordem': 1, 'img': 'https://res.cloudinary.com/demo/image/upload/v1/docs/sample.jpg'},
+            {'nome': 'Ajuda', 'cat': 'Necessidades', 'audio': 'Ajuda', 'ordem': 2, 'img': 'https://res.cloudinary.com/demo/image/upload/v1/docs/sample.jpg'},
+            {'nome': 'Descanso', 'cat': 'Necessidades', 'audio': 'Descanso', 'ordem': 3, 'img': 'https://res.cloudinary.com/demo/image/upload/v1/docs/sample.jpg'},
+            {'nome': 'Sede', 'cat': 'Necessidades', 'audio': 'Sede', 'ordem': 4, 'img': 'https://res.cloudinary.com/demo/image/upload/v1/docs/sample.jpg'},
+
             # AÇÕES
-            {'nome': 'Brincar', 'cat': 'Ações', 'audio': 'Brincar', 'ordem': 1, 'img': '/static/images/brincar.png'},
-            {'nome': 'Comer', 'cat': 'Ações', 'audio': 'Comer', 'ordem': 2, 'img': '/static/images/comer.png'},
-            {'nome': 'Dormir', 'cat': 'Ações', 'audio': 'Dormir', 'ordem': 3, 'img': '/static/images/dormir.png'},
-            {'nome': 'Sair', 'cat': 'Ações', 'audio': 'Sair', 'ordem': 4, 'img': '/static/images/sair.png'},
+            {'nome': 'Brincar', 'cat': 'Ações', 'audio': 'Brincar', 'ordem': 1, 'img': 'https://res.cloudinary.com/demo/image/upload/v1/docs/sample.jpg'},
+            {'nome': 'Comer', 'cat': 'Ações', 'audio': 'Comer', 'ordem': 2, 'img': 'https://res.cloudinary.com/demo/image/upload/v1/docs/sample.jpg'},
+            {'nome': 'Dormir', 'cat': 'Ações', 'audio': 'Dormir', 'ordem': 3, 'img': 'https://res.cloudinary.com/demo/image/upload/v1/docs/sample.jpg'},
+            {'nome': 'Sair', 'cat': 'Ações', 'audio': 'Sair', 'ordem': 4, 'img': 'https://res.cloudinary.com/demo/image/upload/v1/docs/sample.jpg'},
 
         ]
         
