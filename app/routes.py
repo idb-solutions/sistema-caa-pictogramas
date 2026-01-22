@@ -579,17 +579,9 @@ def api_obter_historico_sessao(sessao_id):
 @main.route('/api/upload', methods=['POST'])
 @login_required
 def api_upload_imagem():
-    """Upload de imagem para pictograma via Cloudinary"""
-    import cloudinary
-    import cloudinary.uploader
+    """Upload de imagem para pictograma via Cloudinary ou local"""
+    import os
     from flask import current_app
-
-    # Configurar Cloudinary
-    cloudinary.config(
-        cloud_name=current_app.config.get('CLOUDINARY_CLOUD_NAME'),
-        api_key=current_app.config.get('CLOUDINARY_API_KEY'),
-        api_secret=current_app.config.get('CLOUDINARY_API_SECRET')
-    )
 
     if 'imagem' not in request.files:
         return jsonify({'erro': 'Nenhuma imagem enviada'}), 400
@@ -605,24 +597,55 @@ def api_upload_imagem():
     if extensao not in extensoes_permitidas:
         return jsonify({'erro': 'Formato não permitido'}), 400
 
-    try:
-        # Upload para Cloudinary
-        resultado = cloudinary.uploader.upload(
-            arquivo,
-            folder='pictogramas_caa',
-            resource_type='image',
-            transformation=[
-                {'width': 500, 'height': 500, 'crop': 'limit'},
-                {'quality': 'auto:good'}
-            ]
-        )
+    # Verificar se Cloudinary está configurado
+    cloudinary_configured = all([
+        current_app.config.get('CLOUDINARY_CLOUD_NAME'),
+        current_app.config.get('CLOUDINARY_API_KEY'),
+        current_app.config.get('CLOUDINARY_API_SECRET')
+    ])
 
-        url = resultado['secure_url']
+    if cloudinary_configured:
+        # Usar Cloudinary (produção)
+        try:
+            import cloudinary
+            import cloudinary.uploader
 
-        return jsonify({'sucesso': True, 'url': url})
+            cloudinary.config(
+                cloud_name=current_app.config.get('CLOUDINARY_CLOUD_NAME'),
+                api_key=current_app.config.get('CLOUDINARY_API_KEY'),
+                api_secret=current_app.config.get('CLOUDINARY_API_SECRET')
+            )
 
-    except Exception as e:
-        return jsonify({'erro': f'Erro ao fazer upload: {str(e)}'}), 500
+            resultado = cloudinary.uploader.upload(
+                arquivo,
+                folder='pictogramas_caa',
+                resource_type='image',
+                transformation=[
+                    {'width': 500, 'height': 500, 'crop': 'limit'},
+                    {'quality': 'auto:good'}
+                ]
+            )
+
+            url = resultado['secure_url']
+            return jsonify({'sucesso': True, 'url': url})
+
+        except Exception as e:
+            return jsonify({'erro': f'Erro ao fazer upload no Cloudinary: {str(e)}'}), 500
+    else:
+        # Usar armazenamento local (desenvolvimento)
+        try:
+            nome_arquivo = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{arquivo.filename}"
+            pasta_uploads = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'app', 'static', 'images')
+            os.makedirs(pasta_uploads, exist_ok=True)
+
+            caminho_completo = os.path.join(pasta_uploads, nome_arquivo)
+            arquivo.save(caminho_completo)
+
+            url = f"/static/images/{nome_arquivo}"
+            return jsonify({'sucesso': True, 'url': url})
+
+        except Exception as e:
+            return jsonify({'erro': f'Erro ao salvar arquivo localmente: {str(e)}'}), 500
 
 
 # ========== API - HEALTH CHECK ==========

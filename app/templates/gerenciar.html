@@ -517,12 +517,45 @@
         function previewImagem(event) {
             const file = event.target.files[0];
             if (file) {
+                // Validar tamanho (máximo 5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    showAlert('Arquivo muito grande! Máximo 5MB', 'warning');
+                    event.target.value = '';
+                    return;
+                }
+
+                // Validar tipo
+                const extensoesPermitidas = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
+                if (!extensoesPermitidas.includes(file.type)) {
+                    showAlert('Formato não permitido! Use PNG, JPG, GIF ou WEBP', 'warning');
+                    event.target.value = '';
+                    return;
+                }
+
                 const reader = new FileReader();
+
                 reader.onload = (e) => {
-                    document.getElementById('previewImagem').src = e.target.result;
-                    document.getElementById('previewContainer').style.display = 'block';
+                    const previewImg = document.getElementById('previewImagem');
+                    const previewContainer = document.getElementById('previewContainer');
+
+                    if (previewImg && previewContainer) {
+                        previewImg.src = e.target.result;
+                        previewContainer.style.display = 'block';
+                        console.log('Preview carregado com sucesso');
+                    } else {
+                        console.error('Elementos de preview não encontrados');
+                    }
                 };
+
+                reader.onerror = (error) => {
+                    console.error('Erro ao ler arquivo:', error);
+                    showAlert('Erro ao carregar imagem', 'error');
+                };
+
                 reader.readAsDataURL(file);
+            } else {
+                // Se nenhum arquivo foi selecionado, esconder preview
+                document.getElementById('previewContainer').style.display = 'none';
             }
         }
 
