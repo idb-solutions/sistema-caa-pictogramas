@@ -459,10 +459,24 @@
             const modal = document.getElementById('modalPictograma');
             const titulo = document.getElementById('tituloModalPictograma');
             const form = document.getElementById('formPictograma');
+            const inputFile = document.getElementById('pictogramaImagem');
+            const previewImg = document.getElementById('previewImagem');
+            const previewContainer = document.getElementById('previewContainer');
 
+            // Limpar formulário e preview
             form.reset();
             imagemUrlAtual = null;
-            document.getElementById('previewContainer').style.display = 'none';
+            previewContainer.style.display = 'none';
+            previewImg.src = '';
+
+            // Limpar handlers antigos para evitar conflitos
+            previewImg.onload = null;
+            previewImg.onerror = null;
+
+            // Limpar valor do input file explicitamente
+            if (inputFile) {
+                inputFile.value = '';
+            }
 
             if (pictogramaId) {
                 const pictograma = pictogramas.find(p => p.id === pictogramaId);
@@ -478,45 +492,20 @@
                 document.getElementById('pictogramaAudio').value = pictograma.audio_texto;
                 document.getElementById('pictogramaOrdem').value = pictograma.ordem || '';
 
-                // Mostrar preview da imagem atual
+                // Mostrar preview da imagem atual (simplificado)
                 imagemUrlAtual = pictograma.imagem_url;
 
                 if (pictograma.imagem_url) {
-                    console.log('Carregando preview para:', pictograma);
+                    console.log('📷 Carregando preview da imagem existente:', pictograma.imagem_url);
 
-                    const previewImg = document.getElementById('previewImagem');
-                    const previewContainer = document.getElementById('previewContainer');
-
-                    // Limpar src anterior
-                    previewImg.src = '';
-                    previewContainer.style.display = 'none';
-
-                    // Adicionar handlers de load e erro
-                    previewImg.onload = function() {
-                        console.log('✓ Preview carregado com sucesso');
-                        previewContainer.style.display = 'block';
-                    };
-
-                    previewImg.onerror = function(e) {
-                        console.error('✗ Erro ao carregar preview:', e);
-                        previewContainer.style.display = 'none';
-                    };
-
-                    // Pequeno delay para garantir que os handlers foram anexados
+                    // Aguardar um pouco para garantir que limpeza foi feita
                     setTimeout(() => {
                         previewImg.src = pictograma.imagem_url;
-
-                        // Se a imagem já estava em cache, onload pode não disparar
-                        // Verificar após um pequeno delay
-                        setTimeout(() => {
-                            if (previewImg.complete && previewImg.naturalHeight !== 0) {
-                                console.log('✓ Imagem já em cache, forçando display');
-                                previewContainer.style.display = 'block';
-                            }
-                        }, 100);
-                    }, 50);
+                        previewContainer.style.display = 'block';
+                        console.log('✓ Preview da imagem existente exibido');
+                    }, 100);
                 } else {
-                    console.warn('Pictograma sem URL de imagem');
+                    console.warn('⚠️ Pictograma sem URL de imagem');
                 }
             } else {
                 titulo.textContent = 'Novo Pictograma';
@@ -557,6 +546,9 @@
 
         function previewImagem(event) {
             const file = event.target.files[0];
+
+            console.log('📸 previewImagem chamada:', file ? file.name : 'nenhum arquivo');
+
             if (file) {
                 // Validar tamanho (máximo 5MB)
                 if (file.size > 5 * 1024 * 1024) {
@@ -573,30 +565,43 @@
                     return;
                 }
 
+                const previewImg = document.getElementById('previewImagem');
+                const previewContainer = document.getElementById('previewContainer');
+
+                // Remover handlers antigos para evitar conflitos
+                previewImg.onload = null;
+                previewImg.onerror = null;
+
                 const reader = new FileReader();
 
                 reader.onload = (e) => {
-                    const previewImg = document.getElementById('previewImagem');
-                    const previewContainer = document.getElementById('previewContainer');
-
                     if (previewImg && previewContainer) {
+                        // Definir novo src com data URL
                         previewImg.src = e.target.result;
                         previewContainer.style.display = 'block';
-                        console.log('Preview carregado com sucesso');
+
+                        // Atualizar variável global
+                        imagemUrlAtual = null; // Forçar novo upload
+
+                        console.log('✓ Preview atualizado com nova imagem selecionada');
                     } else {
-                        console.error('Elementos de preview não encontrados');
+                        console.error('✗ Elementos de preview não encontrados');
                     }
                 };
 
                 reader.onerror = (error) => {
-                    console.error('Erro ao ler arquivo:', error);
+                    console.error('✗ Erro ao ler arquivo:', error);
                     showAlert('Erro ao carregar imagem', 'error');
                 };
 
                 reader.readAsDataURL(file);
             } else {
                 // Se nenhum arquivo foi selecionado, esconder preview
-                document.getElementById('previewContainer').style.display = 'none';
+                const previewContainer = document.getElementById('previewContainer');
+                if (previewContainer) {
+                    previewContainer.style.display = 'none';
+                }
+                console.log('ℹ️ Nenhum arquivo selecionado, preview oculto');
             }
         }
 
