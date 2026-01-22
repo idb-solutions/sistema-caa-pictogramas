@@ -189,7 +189,7 @@
                 <!-- Preview da imagem -->
                 <div id="previewContainer" style="display: none; text-align: center; margin: 16px 0;">
                     <p style="font-size: 0.85rem; color: var(--gray-600); margin-bottom: 8px;">Preview:</p>
-                    <img id="previewImagem" style="max-width: 150px; max-height: 150px; border-radius: var(--radius); border: 2px solid var(--gray-200);">
+                    <img id="previewImagem" alt="Preview da imagem" style="max-width: 150px; max-height: 150px; border-radius: var(--radius); border: 2px solid var(--gray-200); display: block; margin: 0 auto;">
                 </div>
 
                 <div class="form-group">
@@ -466,6 +466,11 @@
 
             if (pictogramaId) {
                 const pictograma = pictogramas.find(p => p.id === pictogramaId);
+                if (!pictograma) {
+                    showAlert('Pictograma não encontrado', 'error');
+                    return;
+                }
+
                 titulo.textContent = 'Editar Pictograma';
                 document.getElementById('pictogramaId').value = pictograma.id;
                 document.getElementById('pictogramaNome').value = pictograma.nome;
@@ -475,8 +480,44 @@
 
                 // Mostrar preview da imagem atual
                 imagemUrlAtual = pictograma.imagem_url;
-                document.getElementById('previewImagem').src = pictograma.imagem_url;
-                document.getElementById('previewContainer').style.display = 'block';
+
+                if (pictograma.imagem_url) {
+                    console.log('Carregando preview para:', pictograma);
+
+                    const previewImg = document.getElementById('previewImagem');
+                    const previewContainer = document.getElementById('previewContainer');
+
+                    // Limpar src anterior
+                    previewImg.src = '';
+                    previewContainer.style.display = 'none';
+
+                    // Adicionar handlers de load e erro
+                    previewImg.onload = function() {
+                        console.log('✓ Preview carregado com sucesso');
+                        previewContainer.style.display = 'block';
+                    };
+
+                    previewImg.onerror = function(e) {
+                        console.error('✗ Erro ao carregar preview:', e);
+                        previewContainer.style.display = 'none';
+                    };
+
+                    // Pequeno delay para garantir que os handlers foram anexados
+                    setTimeout(() => {
+                        previewImg.src = pictograma.imagem_url;
+
+                        // Se a imagem já estava em cache, onload pode não disparar
+                        // Verificar após um pequeno delay
+                        setTimeout(() => {
+                            if (previewImg.complete && previewImg.naturalHeight !== 0) {
+                                console.log('✓ Imagem já em cache, forçando display');
+                                previewContainer.style.display = 'block';
+                            }
+                        }, 100);
+                    }, 50);
+                } else {
+                    console.warn('Pictograma sem URL de imagem');
+                }
             } else {
                 titulo.textContent = 'Novo Pictograma';
                 document.getElementById('pictogramaId').value = '';
