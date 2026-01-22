@@ -182,7 +182,7 @@
 
                 <div class="form-group">
                     <label for="pictogramaImagem">Imagem do Pictograma *</label>
-                    <input type="file" id="pictogramaImagem" accept="image/png,image/jpg,image/jpeg,image/gif" onchange="previewImagem(event)">
+                    <input type="file" id="pictogramaImagem" accept="image/png,image/jpg,image/jpeg,image/gif,image/webp">
                     <span class="form-hint">Tamanho recomendado: 300x300px. Formato: PNG, JPG, GIF</span>
                 </div>
 
@@ -222,6 +222,18 @@
         window.addEventListener('DOMContentLoaded', async () => {
             await carregarUsuarioAtual();
             await carregarCategorias();
+
+            // Configurar listener de preview de imagem
+            const inputImagem = document.getElementById('pictogramaImagem');
+            if (inputImagem) {
+                inputImagem.addEventListener('change', function(event) {
+                    console.log('🎯 Event listener disparado!');
+                    atualizarPreview(event);
+                });
+                console.log('✓ Event listener de preview configurado');
+            } else {
+                console.error('✗ Input pictogramaImagem não encontrado');
+            }
         });
 
         async function carregarUsuarioAtual() {
@@ -463,19 +475,19 @@
             const previewImg = document.getElementById('previewImagem');
             const previewContainer = document.getElementById('previewContainer');
 
-            // Limpar formulário e preview
+            console.log('🔧 Abrindo modal pictograma, ID:', pictogramaId);
+
+            // Limpar formulário e preview completamente
             form.reset();
             imagemUrlAtual = null;
             previewContainer.style.display = 'none';
-            previewImg.src = '';
-
-            // Limpar handlers antigos para evitar conflitos
+            previewImg.removeAttribute('src');
             previewImg.onload = null;
             previewImg.onerror = null;
 
-            // Limpar valor do input file explicitamente
             if (inputFile) {
                 inputFile.value = '';
+                console.log('✓ Input file limpo');
             }
 
             if (pictogramaId) {
@@ -544,65 +556,69 @@
             }
         }
 
-        function previewImagem(event) {
+        // Função simplificada para atualizar preview
+        function atualizarPreview(event) {
             const file = event.target.files[0];
+            const previewImg = document.getElementById('previewImagem');
+            const previewContainer = document.getElementById('previewContainer');
 
-            console.log('📸 previewImagem chamada:', file ? file.name : 'nenhum arquivo');
+            console.log('🖼️ atualizarPreview chamada');
+            console.log('   Arquivo:', file ? file.name : 'nenhum');
+            console.log('   Tamanho:', file ? (file.size / 1024).toFixed(2) + 'KB' : 'N/A');
 
-            if (file) {
-                // Validar tamanho (máximo 5MB)
-                if (file.size > 5 * 1024 * 1024) {
-                    showAlert('Arquivo muito grande! Máximo 5MB', 'warning');
-                    event.target.value = '';
-                    return;
-                }
+            if (!file) {
+                console.log('⚠️ Nenhum arquivo selecionado');
+                previewContainer.style.display = 'none';
+                return;
+            }
 
-                // Validar tipo
-                const extensoesPermitidas = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
-                if (!extensoesPermitidas.includes(file.type)) {
-                    showAlert('Formato não permitido! Use PNG, JPG, GIF ou WEBP', 'warning');
-                    event.target.value = '';
-                    return;
-                }
+            // Validar tamanho (máximo 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showAlert('Arquivo muito grande! Máximo 5MB', 'warning');
+                event.target.value = '';
+                previewContainer.style.display = 'none';
+                return;
+            }
 
-                const previewImg = document.getElementById('previewImagem');
-                const previewContainer = document.getElementById('previewContainer');
+            // Validar tipo
+            const extensoesPermitidas = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
+            if (!extensoesPermitidas.includes(file.type)) {
+                showAlert('Formato não permitido! Use PNG, JPG, GIF ou WEBP', 'warning');
+                event.target.value = '';
+                previewContainer.style.display = 'none';
+                return;
+            }
 
-                // Remover handlers antigos para evitar conflitos
+            // Ler arquivo e mostrar preview
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                console.log('✅ FileReader.onload disparado');
+
+                // Forçar limpeza completa do preview antigo
+                previewImg.removeAttribute('src');
                 previewImg.onload = null;
                 previewImg.onerror = null;
 
-                const reader = new FileReader();
+                // Pequeno delay para garantir limpeza
+                setTimeout(() => {
+                    previewImg.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                    imagemUrlAtual = null; // Forçar novo upload
 
-                reader.onload = (e) => {
-                    if (previewImg && previewContainer) {
-                        // Definir novo src com data URL
-                        previewImg.src = e.target.result;
-                        previewContainer.style.display = 'block';
+                    console.log('✓ Preview atualizado com sucesso!');
+                    console.log('   Data URL length:', e.target.result.length);
+                }, 10);
+            };
 
-                        // Atualizar variável global
-                        imagemUrlAtual = null; // Forçar novo upload
+            reader.onerror = function(error) {
+                console.error('❌ Erro ao ler arquivo:', error);
+                showAlert('Erro ao carregar imagem', 'error');
+                previewContainer.style.display = 'none';
+            };
 
-                        console.log('✓ Preview atualizado com nova imagem selecionada');
-                    } else {
-                        console.error('✗ Elementos de preview não encontrados');
-                    }
-                };
-
-                reader.onerror = (error) => {
-                    console.error('✗ Erro ao ler arquivo:', error);
-                    showAlert('Erro ao carregar imagem', 'error');
-                };
-
-                reader.readAsDataURL(file);
-            } else {
-                // Se nenhum arquivo foi selecionado, esconder preview
-                const previewContainer = document.getElementById('previewContainer');
-                if (previewContainer) {
-                    previewContainer.style.display = 'none';
-                }
-                console.log('ℹ️ Nenhum arquivo selecionado, preview oculto');
-            }
+            console.log('📖 Iniciando leitura do arquivo...');
+            reader.readAsDataURL(file);
         }
 
         document.getElementById('formPictograma').addEventListener('submit', async (e) => {
